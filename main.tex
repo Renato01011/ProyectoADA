@@ -1,0 +1,542 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry} 
+\usepackage{amsmath,amsthm,amssymb,amsfonts}
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{mathtools}
+\selectlanguage{spanish}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage[noend]{algorithmic}
+
+%pseudocodigo
+\newcommand{\TITLE}[1]{\item[#1]}
+\renewcommand{\algorithmiccomment}[1]{$/\!/$ \parbox[t]{4.5cm}{\raggedright #1}}
+% ugly hack for for/while
+\newbox\fixbox
+\renewcommand{\algorithmicdo}{\setbox\fixbox\hbox{\ {}}\hskip-\wd\fixbox}
+% end of hack
+%imitando para if
+\renewcommand{\algorithmicthen}{\setbox\fixbox\hbox{\ {}}\hskip-\wd\fixbox}
+\newcommand{\algcost}[2]{\strut\hfill\makebox[1.5cm][l]{#1}\makebox[2cm][l]{#2}}
+
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=blue,      
+    urlcolor=blue,
+}
+
+\newcommand{\SWITCH}[1]{\STATE \textbf{switch} (#1)}
+\newcommand{\ENDSWITCH}{\STATE \textbf{end switch}}
+\newcommand{\CASE}[1]{\STATE \textbf{case} #1\textbf{:} \begin{ALC@g}}
+\newcommand{\ENDCASE}{\end{ALC@g}}
+\newcommand{\CASELINE}[1]{\STATE \textbf{case} #1\textbf{:} }
+
+\begin{document}
+
+\title{Proyecto Análisis y Diseño de Algoritmos}
+\author{Renato Bacigalupo Ortiz-Arrieta}
+\date{Junio 2020}
+
+\maketitle
+
+\section{Introduccion}
+
+En este documento se hará el diseño de los algoritmos pedidos en el proyecto del curso de Análisis y Diseño de Algoritmos.
+Los códigos implementados pueden encontrarse en las carpetas adjuntadas o en este 
+\href{https://github.com/Renato01011/ProyectoADA}{repositorio de github}.
+
+
+\section{Secuencias}
+
+\subsection*{Pregunta 1 (Voraz)}
+
+Este primer algoritmo estará dividido en dos subrutinas, la subrutina \textsc{Match} y la subrutina \textsc{Min-Matching}. Esto lo hacemos para que sea más entendible el algoritmo. Implementación: ver anexo o github Secuencias/Pregunta1.cpp\vspace{5mm}
+
+Lo que hace el primer algoritmo \textsc{Match} es encontrar y guardar en un arreglo los bloques de los arreglos de unos y ceros de entrada. Es decir, que este primer algoritmo calcula el índice de inicio y final de cada uno de cada bloque en los dos arreglos.
+
+Al final \textsc{Match} llama a la subrutina \textsc{Min-Matching}.
+
+Primero analizaremos el tiempo de ejecución de \textsc{Match}. No contaremos dentro de este algoritmo el tiempo de ejecución de la llamada a \textsc{Min-Matching}, ya que este tiempo lo calcularemos después, al final juntaremos los dos tiempos. Tomaremos un peor caso como el de inputs como los siguientes:
+$$A=\{0,1,0,1,0,1,0,1,0,1\}$$
+$$B=\{0,1,0,1,0,1,0,1,0,1\}$$
+
+\begin{algorithmic}[1]
+    \REQUIRE Dos arreglos A y B con ceros y unos de tamaño p.
+    \ENSURE Dos arreglos de los bloques de unos de cada arreglo resperctivo.
+    \TITLE{\textsc{Match}$(A,B,p)$}                             \algcost{\textit{cost}}{\textit{times}}
+    \STATE $M_1,M_2 = \emptyset$                                \algcost{$c1$}{$1$}
+    \STATE $n_1 = -1$                                           \algcost{$c2$}{$1$}
+    \STATE $m_1 = -1$                                           \algcost{$c3$}{$1$}
+    \FOR{$i=0$ \TO $p$                                          \algcost{$c4$}{$p+1$}}
+        \IF{$A[i] == 1$ \AND $n_1 == -1$                        \algcost{$c5$}{$p$}}
+            \STATE $n_1 = i$                                    \algcost{$c6$}{$p/2$}
+        \ELSIF{$A[i] == 0$ \AND $n_1 \neq -1$                   \algcost{$c7$}{$p/2$}}
+            \STATE $M_1 = M_1 \cup (n_1,i-1)$                  \algcost{$c8$}{$p/2$}
+            \STATE $n_1 = -1$                                   \algcost{$c9$}{$p/2$}
+        \ENDIF  
+        \IF{$i == p - 1$ \AND $A[i] == 1$ \AND $n_1 \neq -1$    \algcost{$c10$}{$p$}}
+            \STATE $M_1 = M_1 \cup (n_1,i-1)$                  \algcost{$c11$}{$0$}
+        \ELSIF{$i == p - 1$ \AND $A[i] == 1$ \AND $n_1 == -1$   \algcost{$c12$}{$1$}}
+            \STATE $M_1 = M_1 \cup (i-1,i-1)$                  \algcost{$c13$}{$1$}
+        \ENDIF
+        \IF{$B[i] == 1$ \AND $m_1 == -1$                        \algcost{$c14$}{$p$}}
+            \STATE $m_1 = i$                                    \algcost{$c15$}{$p/2$}
+        \ELSIF{$B[i] == 0$ \AND $m_1 \neq -1$                   \algcost{$c16$}{$p/2$}}
+            \STATE $M_2 = M_2 \cup (m_1,i-1)$                  \algcost{$c17$}{$p/2$}
+            \STATE $m_1 = -1$                                   \algcost{$c18$}{$p/2$}
+        \ENDIF
+        \IF{$i == p - 1$ \AND $B[i] == 1$ \AND $m_1 \neq -1$    \algcost{$c19$}{$p$}}
+            \STATE $M_2 = M_2 \cup (m_1,i-1)$                  \algcost{$c20$}{$0$}
+        \ELSIF{$i == p - 1$ \AND $B[i] == 1$ \AND $m_1 == -1$   \algcost{$c21$}{$1$}}
+            \STATE $M_2 = M_2 \cup (i-1,i-1)$                  \algcost{$c22$}{$1$}
+        \ENDIF
+    \ENDFOR
+    \RETURN \textsc{Min-Matching}$(M_1,M_2)$                    \algcost{$?$}{$1$}
+\end{algorithmic}
+
+Ahora sumamos todos los tiempos y las veces de ejecución: 
+$T(A,B,p) = c1+c2+c3+c4(p+1)+c5p+c6\frac{p}{2}+c7\frac{p}{2}+c8\frac{p}{2}+c9\frac{p}{2}+c10p+c11*0+c12+c13+c14p+c15\frac{p}{2}+c16\frac{p}{2}+c17\frac{p}{2}+c18\frac{p}{2}+c19\frac{p}{2}+c20*0+c21+c22$
+
+Con esto concluimos que el tiempo de ejecución de \textsc{Match} (sin contar el tiempo de ejecución de \textsc{Min-Matching}) es $O(p)$ \vspace{5mm}
+
+Ahora calcularemos el tiempo de ejecución de \textsc{Min-Matching} considerando un peor caso para el algoritmo, este será el caso en el que se hace match de uno a uno de todos los bloques hasta que uno llega al a su bloque final y tiene que agrupar o dividir los restantes obligatoriamente.
+
+\begin{algorithmic}[1]
+    \REQUIRE Dos arreglos A y B con ceros y unos de tamaño p.
+    \ENSURE Un conjunto con el maching no necesariamente optimo, y su peso.
+    \TITLE{\textsc{Min-Matching}$(M_1,M_2)$}                  \algcost{\textit{cost}}{\textit{times}}
+    \STATE $S = \emptyset$                                  \algcost{$c1$}{$1$}
+    \STATE $i,j,temp = 0$                                   \algcost{$c2$}{$1$}
+    \STATE $peso, num = 0$                                  \algcost{$c3$}{$1$}
+    \WHILE{$i \leq M_1.length$ \AND $j \leq M_2.length$     \algcost{$c4$}{$max(n,m)$}}
+        \IF{$j == M_2.length$                               \algcost{$c5$}{$1$}}
+            \STATE $num = 0$                                \algcost{$c6$}{$1$}
+            \WHILE{$i \leq M_1.length$                      \algcost{$c7$}{$n-m+1$}}
+                \STATE $S = S \cup (M_1[i], M_2[j])$        \algcost{$c8$}{$n-m$}
+                \STATE $num += M_1[i].w$                    \algcost{$c9$}{$n-m$}
+                \STATE $i += 1$                             \algcost{$c10$}{$n-m$}
+            \ENDWHILE
+            \STATE $peso += num/M_2[j].w$                   \algcost{$c11$}{$1$}
+        \ELSIF{$i == M_1.length$                            \algcost{$c12$}{$0$}}
+            \STATE $num = 0$                                \algcost{$c13$}{$0$}
+            \WHILE{$j \leq M_2.length$                      \algcost{$c14$}{$0$}}
+                \STATE $S = S \cup (M_1[i], M_2[j])$        \algcost{$c15$}{$0$}
+                \STATE $num += M_2[j].w$                    \algcost{$c16$}{$0$}
+                \STATE $j += 1$                             \algcost{$c17$}{$0$}
+            \ENDWHILE
+            \STATE $peso += M_1[i].w/num$                   \algcost{$c18$}{$0$}
+        \ELSIF{$M_1[i].w > M_2[j].w$                        \algcost{$c19$}{$0$}}
+            \STATE $temp = M_1[i].w$                        \algcost{$c20$}{$0$}
+            \STATE $num = 0$                                \algcost{$c21$}{$0$}
+            \WHILE{$temp > 0$                               \algcost{$c22$}{$0$}}
+                \STATE $S = S \cup (M_1[i], M_2[j])$        \algcost{$c23$}{$0$}
+                \STATE $temp = temp - M_2[j].w$             \algcost{$c24$}{$0$}
+                \STATE $num += M_2[j].w$                    \algcost{$c25$}{$0$}
+                \STATE $j += 1$                             \algcost{$c26$}{$0$}
+            \ENDWHILE
+            \STATE $peso += M_1[i].w/num$                   \algcost{$c27$}{$0$}
+            \STATE $i += 1$                                 \algcost{$c28$}{$0$}
+        \ELSIF{$M_1[i].w < M_2[j].w$                        \algcost{$c29$}{$0$}}
+            \STATE $temp = M_2[j].w$                        \algcost{$c30$}{$0$}
+            \STATE $num = 0$                                \algcost{$c31$}{$0$}
+            \WHILE{$temp > 0$                               \algcost{$c32$}{$0$}}
+                \STATE $S = S \cup (M_1[i], M_2[j])$        \algcost{$c33$}{$0$}
+                \STATE $temp = temp - M_1[j].w$             \algcost{$c34$}{$0$}
+                \STATE $num += M_1[i].w$                    \algcost{$c35$}{$0$}
+                \STATE $i += 1$                             \algcost{$c36$}{$0$}
+            \ENDWHILE
+            \STATE $peso += num/M_2[j].w$                   \algcost{$c37$}{$0$}
+            \STATE $j += 1$                                 \algcost{$c38$}{$0$}
+        \ELSIF{$M_1[i].w == M_2[j].w$                       \algcost{$c39$}{$min(n,m)+1$}}
+            \STATE $S = S \cup (M_1[i], M_2[j])$            \algcost{$c40$}{$min(n,m)$}
+            \STATE $peso += \frac{M_1[i].w}{M_2[j].w}$      \algcost{$c41$}{$min(n,m)$}
+            \STATE $i,j += 1$                                \algcost{$c42$}{$min(n,m)$}
+        \ENDIF
+    \ENDWHILE
+  \RETURN $S, peso$                                         \algcost{$c44$}{$1$}
+\end{algorithmic}
+
+Ahora sumamos todos los valores de costo y tiempo: $T(M_1,M_2) = c1+c2+c3+c4max(n,m)+c5+c6+c7(n-m+1)+c8(n-m)+c9(n-m)+c10(n-m)+c11+c39min(n,m)+1+c40min(n,m)+c41min(n,m)+c42min(n,m)+c43min(n,m)+c44$
+
+En este peor caso particular para el algoritmo como se ejecuta la línea 5, eso quiere decir que el $min(n,m) = m$ y el $max(n,m) = n$. Intercambiaremos estos valores para poder darnos cuenta al final del tiempo de ejecución real del algoritmo. Entonces:
+$T(M_1,M_2) = c1+c2+c3+c4n+c5+c6+c7(n-m+1)+c8(n-m)+c9(n-m)+c10(n-m)+c11+c39m+1+c40m+c41m+c42m+c44$
+
+Esto simplificado queda: $T(M_1,M_2) = cn+c_1$, pero esto se consideró para este caso donde $max(n,m) = n$, lo que quiere decir, que también existe un peor caso donde $max(n,m) = m$, lo que quiere decir que este algoritmo tiene tiempo de ejecución: $O(max(n,m))$
+
+\newpage
+\subsection*{Pregunta 2 (Recurrecia)}
+
+Sean $A$ y $B$ arreglos que contienen los pesos de los bloques.
+
+Sea $OPT(i, j)$ el peso de una solución optima para el subproblema que solo considera a los $i$ primeros bloques de $A$ y a los $j$ primeros bloques de $B$.
+
+\begin{equation*}
+OPT(i,j) =
+\begin{cases}
+\min \{ \min_{a=i-1}^{1} \{OPT(a-1,j-1) + \frac{\sum_{b=a}^{i} A[b]}{B[j]}\}, \\
+        \min_{a=j-1}^{1} \{OPT(i-1,a-1) + \frac{A[i]}{\sum_{b=a}^{j} B[b]}\}, \\
+        OPT(i-1,j-1) + \frac{A[i]}{B[j]}\} & i > 0, j > 0\\
+
+\frac{A[i]}{\sum_{a=0}^{j} B[a]} & i = 0, j > 0\\
+\frac{\sum_{a=0}^{i} A[a]}{B[j]} & i > 0, j = 0\\
+\frac{A[i]}{B[j]} & i = 0, j = 0 
+\end{cases}
+\end{equation*}
+
+Demostraremos por inducción que la recurrencia tiene tiempo de ejecución $\Omega(2^{max(n,m)})$, es decir $OPT(i,j) = \Omega(2^{max(i,j)})$.
+En el caso base tenemos $i = 1$ y $j = 1$:
+$$\frac{A[1]}{B[1]} \geq c2^{max(1,1)}$$
+Si $c=\frac{A[1]/B[1]}{2}$ entonces:
+$$\frac{A[1]}{B[1]} \geq \frac{A[1]}{B[1]}$$
+Por ende, el caso base cumple. Ahora probaremos el caso inductivo:
+$$OPT(i,j) \geq c2^{max(i,j)}$$
+Sabemos que:
+$OPT(i,j) = \min \{ \min_{a=i-1}^{1} \{OPT(a-1,j-1) + \frac{\sum_{b=a}^{i} A[b]}{B[j]}\}, \min_{a=j-1}^{1} \{OPT(i-1,a-1) + \frac{A[i]}{\sum_{b=a}^{j} B[b]}\}, OPT(i-1,j-1) + \frac{A[i]}{B[j]}\}$
+%Vemos que el tercer parámetro de la subrutina $\min$ es el que toma menos tiempo en ejecutarse, ya que no debe llamar a la recurrencia más de una vez como lo hacen los otros parámetros, por ende si podemos demostrar que esta posibilidad es $\Omega(2^{max(i,j)}$, entonces las demás también seran $\Omega(2^{max(i,j)}$.
+
+Ahora probaremos que cada miembro de los parámetros de la subrutina $\min$ son $\Omega(2^{max(i,j)})$. De esta forma no importa cual de los 3 se eliga o si es que se ejecutan los 3 para verificar, el tiempo de ejecución seguirá siendo $\Omega(2^{max(i,j)})$.
+
+Primero tenemos:
+$$\min_{a=i-1}^{1} \{OPT(a-1,j-1) + \frac{\sum_{b=a}^{i} A[b]}{B[j]}\} \geq c2^{max(i,j)}$$
+Por hipótesis de inducción:
+$$ \min_{a=i-1}^{1} \{ c \cdot 2^{max(a-1,j-1)} + \frac{\sum_{b=a}^{i} A[b]}{B[j]} \} \geq c2^{max(i,j)}$$
+Evaluaremos los extremos de la subrutina $\min$ para determinar si estos dos son mayores a el tiempo dicho, si es que lo son entonces cualquier valor en medio lo será también:
+
+Primero el caso del extremo mayor, es decir $a=i-1$:
+$$c \cdot 2^{max(i-2,j-1)} + \frac{\sum_{b=i-1}^{i} A[b]}{B[j]} \geq c2^{max(i,j)}$$
+Diremos que $\frac{\sum_{b=i-1}^{i} A[b]}{B[j]} = k$ al ser constante:
+$$c \cdot 2^{max(i-2,j-1)} + k \geq c2^{max(i,j)}$$
+Para un $c=\frac{1}{2}$ y un $k>0$:
+$$2^{max(i-1,j)} + k \geq 2^{max(i-1,j-1)}$$
+Por ende, cumple para el caso donde $a=i-1$.
+
+Después para el caso del extremo menor, es decir $a=1$:
+$$c \cdot 2^{max(1,j-1)} + \frac{\sum_{b=1}^{i} A[b]}{B[j]} \geq c2^{max(i,j)}$$
+Diremos que $\frac{\sum_{b=i-1}^{i} A[b]}{B[j]} = k$ al ser constante:
+$$c \cdot 2^{max(1,j-1)} + k \geq c2^{max(i,j)}$$
+Para un $c=\frac{1}{2}$ y un $k>0$:
+$$2^{max(0,j)} + k \geq 2^{max(i-1,j-1)}$$
+Por ende, cumple para el caso donde $a=1$.
+
+Es claro que para el caso del segundo parámetro se hace un proceso igual, entonces pasaremos a comprobar el tercer parámetro:
+
+Tenemos:
+$$OPT(i-1,j-1) + \frac{A[i]}{B[j]} \geq c2^{max(i,j)}$$
+Por hipótesis de inducción:
+$$c \cdot 2^{max(i-1,j-1)} + \frac{A[i]}{B[j]} \geq c2^{max(i,j)}$$
+Diremos que $\frac{A[i]}{B[j]} = k$:
+$$c \cdot 2^{max(i-1,j-1)} + k \geq c2^{max(i,j)}$$
+$=$
+$$c \cdot 2^{max(i,j)-1} + k \geq c2^{max(i,j)}$$
+Para un $c=\frac{1}{2}$ y un $k>0$:
+$$2^{max(i,j)} + k \geq 2^{max(i,j)-1}$$
+Por ende, cumple para el tercer parámetro.
+
+Al estos tres parámetros cumplir con $\Omega(2^{max(i,j)})$, es claro que al ejecutarlos al mismo tiempo entonces el tiempo de ejecución será mayor, por ende $OPT(i,j) = \Omega(2^{max(i,j)})$.
+
+\newpage
+\subsection*{Pregunta 3 (Recursivo)}
+
+Implementación: ver anexo o github Secuencias/Pregunta3.cpp\vspace{5mm}
+
+Para que sea más sencillo mantener la data en cada paso del siguiente algoritmo vamos a definir un struct, esto será lo que retorne el algoritmo. Dentro de él guardara el peso y un arreglo de los matches.
+
+\begin{algorithmic}[1]
+    \TITLE{\textsc{struct valores}}
+    \STATE \textit{double} $w$
+    \STATE $match[]$ \COMMENT \textit{Este guardara pares ordenados}
+\end{algorithmic} \vspace{5mm}
+
+Aparte de este struct vamos a dividir el algoritmo en dos diferentes algoritmos, como se hizo en el ejercicio 1, el inicial encontrará los diferentes bloques dentro de los arreglos de unos y ceros y el segundo algoritmo hará el proceso de matching.
+
+\begin{algorithmic}[1]
+    \REQUIRE Dos arreglos de unos y ceros A y B con tamaño p
+    \ENSURE Matching entre los dos arreglos y el peso del mismo
+    \TITLE{\textsc{Match}$(A,B,p)$}                                                 
+    \STATE $M_1,M_2$ \COMMENT{\textit{Estos arreglos guardaran los bloques}}        
+    \STATE $n_1 = -1$                                                               
+    \STATE $m_2 = -1$                                                               
+    \STATE $\_i,\_j = 0$                                                            
+    \FOR{$i=0$ \TO $p$}                                
+        \IF{$A[i] == 1$ \AND $n_1 == -1$}                                
+            \STATE $n_1 = i$                                                        
+        \ELSIF{$A[i] == 0$ \AND $n_1 \neq -1$}                                 
+            \STATE $M_1.push\_back(<n_1,i-1>)$                
+            \STATE $n_1 = -1$                                          
+            \STATE $\_i += 1$                                          
+        \ENDIF
+        \IF{$i == p - 1$ \AND $A[i] == 1$ \AND $n_1 \neq -1$}
+            \STATE $M_1.push\_back(<n_1,i-1>)$                              
+            \STATE $\_i += 1$                                               
+        \ELSIF{$i == p - 1$ \AND $A[i] == 1$ \AND $n_1 == -1$}
+            \STATE $M_1.push\_back(<i-1,i-1>)$                       
+            \STATE $\_i += 1$                                                      
+        \ENDIF
+        \IF{$B[i] == 1$ \AND $m_1 == -1$}
+            \STATE $m_1 = i$                                             
+        \ELSIF{$B[i] == 0$ \AND $m_1 \neq -1$}
+            \STATE $M_2.push\_back(<m_1,i-1>)$                      
+            \STATE $m_1 = -1$               
+            \STATE $\_j += 1$  
+        \ENDIF
+        \IF{$i == p - 1$ \AND $B[i] == 1$ \AND $m_1 \neq -1$}
+            \STATE $M_2.push\_back(<m_1,i-1>)$                                
+            \STATE $\_j += 1$                                                  
+        \ELSIF{$i == p - 1$ \AND $B[i] == 1$ \AND $m_1 == -1$}
+            \STATE $M_2.push\_back(<i-1,i-1>)$ 
+            \STATE $\_j += 1$  
+        \ENDIF
+    \ENDFOR
+    \RETURN $Opt(M_1,M_2,\_i-1,\_j-1)$
+\end{algorithmic}
+
+Este primer algoritmo es igual al algoritmo \textsc{Match} que mostramos en el ejercicio 1, solo que tiene dos contadores extra para saber exactamente el número de bloques de cada arreglo. 
+
+Sin embargo, este cambio no afecta el tiempo de ejecución de este algoritmo que sigue siendo $O(p)$.
+
+\newpage
+
+El siguiente algoritmo recibe lo que el algoritmo anterior le da como parámetro, es decir dos arreglos con los pesos de los bloques y sus tamaños respectivos.
+
+Al este algoritmo ser el mismo que explica la recurrencia de la pregunta 2, solo que con unos pasos extra podemos afirmar que este algoritmo será $\Omega(2^{max(i,j)})$.
+
+Se debe tomar en cuenta que $A[i].peso$ o $B[j].peso$ y las declaraciones parecidas calculan $A[i].second-B[i].first+1$ o $B[j].second-B[j].first+1$ respectivamente.
+
+\begin{algorithmic}[1]
+    \REQUIRE Dos arreglos de pesos de bloques A y B con sus tamaños respectivos i y j.
+    \ENSURE Matching mínimo entre los dos arreglos y el peso del mismo.
+    \TITLE{\textsc{Opt}$(A,B,i,j)$}                                                     \algcost{\textit{cost}}{\textit{times}}
+    \STATE $values$ $v$                                                                 \algcost{$c1$}{$1$}
+    \IF{$i == 0$ \AND $j > 0$                                                           \algcost{$c2$}{$1$}}
+        \STATE $temp = 0$                                                               \algcost{$c3$}{$1$}
+        \FOR{$a=0$ \TO $j$                                                              \algcost{$c4$}{$1$}}
+            \STATE $temp += B[a].peso$                                                  \algcost{$c5$}{$1$}
+            \STATE $v.match = v.match \cup (A[i],B[a])$                                 \algcost{$c6$}{$1$}
+        \ENDFOR
+        \STATE $v.w = A[i].peso/temp$                                                   \algcost{$c7$}{$1$}
+        \RETURN $v$
+    \ELSIF{$i > 0$ \AND $j == 0$                                                        \algcost{$c8$}{$1$}}  
+        \STATE $temp = 0$                                                               \algcost{$c9$}{$1$}
+        \FOR{$a=0$ \TO $i$                                                              \algcost{$c10$}{$1$}}
+            \STATE $temp += A[a].peso$                                                  \algcost{$c11$}{$1$}
+            \STATE $v.match = v.match \cup (A[a],B[j])$                                \algcost{$c12$}{$1$}
+        \ENDFOR
+        \STATE $v.w = temp/B[j].peso$                                                   \algcost{$c13$}{$1$}
+        \RETURN $v$
+    \ELSIF{$i == 0$ \AND $j == 0$                                                       \algcost{$c14$}{$1$}}
+        \STATE $v.match = v.match \cup (A[i],B[j])$                                     \algcost{$c15$}{$1$}
+        \STATE $v.w = A[i].peso/B[j].peso$                                              \algcost{$c16$}{$1$}
+        \RETURN $v$
+    \ELSIF{$i > 0$ \AND $j > 0$                                                         \algcost{$c17$}{$1$}}
+        \STATE $values$ $min_1,min_2,min_3$                                             \algcost{$c18$}{$1$}
+        \STATE $min_1.w = inf$                                                          \algcost{$c19$}{$1$}
+        \STATE $min_2.w = inf$                                                          \algcost{$c20$}{$1$}
+        \STATE $min_3.w = inf$                                                          \algcost{$c21$}{$1$}
+        \FOR{$a=i-1$ \TO $0$                                                            \algcost{$c22$}{$1$}}  
+            \STATE $temp_1 = 0$                                                         \algcost{$c23$}{$1$}
+            \STATE $temp = 0$                                                           \algcost{$c24$}{$1$}
+            \FOR{$b=a$ \TO $i$                                                          \algcost{$c25$}{$1$}}
+                \STATE $temp_1 += A[b].peso$                                            \algcost{$c26$}{$1$}
+            \ENDFOR
+            \STATE $temp_2 = Opt(A,B,a-1,j-1)$                                          \algcost{$T(A,B,a-1,j-1)$}{$1$}
+            \STATE $temp = temp_2.w + (temp_1/B[j].peso)$                               \algcost{$c28$}{$1$}
+            \IF{$temp < min_1.w$                                                        \algcost{$c29$}{$1$}}
+                \STATE $min_1.match = temp_2.match$                                     \algcost{$c30$}{$1$}
+                \STATE $min_1.w = temp$                                                 \algcost{$c31$}{$1$}
+                \STATE $a_1 = a$                                                        \algcost{$c32$}{$1$}
+            \ENDIF
+        \ENDFOR
+        
+        \FOR{$a=j-1$ \TO $0$                                                            \algcost{$c33$}{$1$}}
+            \STATE $temp_1 = 0$                                                         \algcost{$c34$}{$1$}
+            \STATE $temp = 0$                                                           \algcost{$c35$}{$1$}
+            \FOR{$b=a$ \TO $j$                                                          \algcost{$c36$}{$1$}}
+                \STATE $temp_1 += B[b].peso$                                            \algcost{$c37$}{$1$}
+            \ENDFOR
+            \STATE $temp_3 = Opt(A,B,i-1,a-1)$                                          \algcost{$T(A,B,i-1,a-1)$}{$1$}
+            \STATE $temp = temp_3.w + (A[i].peso/temp_1)$                               \algcost{$c39$}{$1$}
+            \IF{$temp < min_2.w$                                                        \algcost{$c40$}{$1$}}
+                \STATE $min_2.match = temp_3.match$                                     \algcost{$c41$}{$1$}
+                \STATE $min_2.w = temp$                                                 \algcost{$c42$}{$1$}
+                \STATE $a_2 = a$                                                        \algcost{$c43$}{$1$}
+            \ENDIF
+        \ENDFOR
+        
+        \STATE $temp_4 = Opt(A,B,i-1,j-1)$                                              \algcost{$T(A,B,i-1,j-1)$}{$1$}
+        \STATE $min_3.w = temp_4.w + A[i].peso/B[j].peso$                               \algcost{$c45$}{$1$}
+        \STATE $min_3.match = temp_4.match$                                             \algcost{$c46$}{$1$}
+        
+        \STATE $cond=0$                                                                 \algcost{$c47$}{$1$}
+        \STATE $values$ $min$                                                           \algcost{$c48$}{$1$}
+        \STATE $min.w = min_1.w$                                                        \algcost{$c49$}{$1$}
+        \STATE $min.match = min_1.match$                                                \algcost{$c50$}{$1$}
+        \FOR{$a=a_1$ \TO $i$                                                            \algcost{$c51$}{$1$}}
+            \STATE $min.match = min.match \cup (A[a],B[j])$                             \algcost{$c52$}{$1$}
+        \ENDFOR
+        \IF{$min.w > min_2.w$                                                           \algcost{$c53$}{$1$}}
+            \STATE $min.w = min_2.w$                                                    \algcost{$c54$}{$1$}
+            \STATE $min.match = min_1.match$                                            \algcost{$c55$}{$1$}
+            \FOR{$a=a_1$ \TO $i$                                                        \algcost{$c56$}{$1$}}
+                \STATE $min.match = min.match \cup (A[i],B[a])$                         \algcost{$c57$}{$1$}
+            \ENDFOR
+        \ELSIF{$min.w > min_3.w$                                                        \algcost{$c58$}{$1$}}
+            \STATE $min.w = min_3.w$                                                    \algcost{$c59$}{$1$}
+            \STATE $min.match = min_1.match$                                            \algcost{$c60$}{$1$}
+            \STATE $min.match = min.match \cup (A[i],B[j])$                             \algcost{$c61$}{$1$}
+        \ENDIF
+    \ENDIF
+    \RETURN $min$
+\end{algorithmic}
+
+\newpage
+\subsection*{Pregunta 4 (Memoizado)}
+
+Implementación: ver anexo o github Secuencias/Pregunta4.cpp\vspace{5mm}
+
+Para este algoritmo se volverá a usar el struct declarado para el algoritmo anterior, de este modo será un poco más entendible el seudocódigo.
+
+Al igual que el algoritmo anterior se partirá este algoritmo en dos algoritmos, el primero calculará los bloques dentro de los arreglos dados y el segundo hará el cálculo del matching.
+
+El algoritmo para calcular los bloques es exactamente igual al algoritmo para calcular los bloques de la pregunta anterior, solo que al final se llama a \textsc{Min-Matching-Memoizado}, en vez de llamar a \textsc{Opt}. Por ende, no se volverá a copiar mismo código, se intuye que existe.
+
+M será la matriz donde se guarden los valores ya calculados. Este guardara los structs values que se mencionaron anteriormente.
+Se debe tomar en cuenta que $A[i].peso$ o $B[j].peso$ y las declaraciones parecidas calculan $A[i].second-B[i].first+1$ o $B[j].second-B[j].first+1$ respectivamente.
+
+\begin{algorithmic}[1]
+    \REQUIRE Dos arreglos A y B con los pesos de los bloques y sus tamaños respectivos.
+    \ENSURE Matching mínimo entre los dos arreglos y su peso.
+    \TITLE{\textsc{Min-Matching-Memoizado}$(A,B,i,j)$}                                  
+    \IF{$i==0$ \AND $j > 0$}
+        \IF{$M[i][j].w == inf$}
+            \STATE $temp = 0$
+            \FOR{$a=0$ \TO $j$}
+                \STATE $temp += B[a].peso$    
+                \STATE $M[i][j].match = M[i][j].match \cup (A[i], B[a])$   
+            \ENDFOR
+            \STATE $M[i][j].w = A[i].peso/temp$    
+            \RETURN $M[i][j]$
+        \ELSE
+            \RETURN $M[i][j]$
+        \ENDIF
+    \ELSIF{$i > 0$ \AND $j == 0$}
+        \IF{$M[i][j].w == inf$}
+            \STATE $temp = 0$     
+            \FOR{$a=0$ \TO $i$}
+                \STATE $temp += A[a].peso$     
+                \STATE $M[i][j].match = M[i][j].match \cup (A[a], B[j])$ 
+            \ENDFOR
+            \STATE $M[i][j].w = temp/B[j].peso$  
+            \RETURN $M[i][j]$
+        \ELSE
+            \RETURN $M[i][j]$
+        \ENDIF
+    \ELSIF{$i == 0$ \AND $j == 0$}
+        \IF{$M[i][j].w == inf$}
+            \STATE $M[i][j].match = M[i][j].match \cup (A[i], B[j])$
+            \STATE $M[i][j].w = A[i].peso/B[j].peso$
+            \RETURN $M[i][j]$
+        \ELSE
+            \RETURN $M[i][j]$
+        \ENDIF
+    \ELSIF{$i > 0$ \AND $j > 0$}
+        \IF{$M[i][j].w == inf$}
+            \STATE $min_1,min_2,min_3 = inf$
+            \STATE $temp,temp_1 = 0$
+            \STATE $a_1,a_2 = 0$
+            \FOR{$a=i-1$ \TO $0$}
+                \STATE $temp_1,temp = 0$
+                \FOR{$b=a$ \TO $i$}
+                    \STATE $temp_1 += A[b].peso$
+                \ENDFOR
+                \IF{$M[a-1][j-1].w == inf$}
+                    \STATE $M[a-1][j-1] = \textsc{Min-Matching-Memoizado}(A,B,a-1,j-1)$
+                    \STATE $temp = M[a-1][j-1].w + (temp_1/B[j].peso)$
+                    \IF{$temp < min_1$}
+                        \STATE $min_1 = temp$
+                        \STATE $a_1 = a$
+                    \ENDIF
+                \ELSE
+                    \STATE $temp = M[a-1][j-1].w + (temp_1/B[j].peso)$
+                    \IF{$temp < min_1$}
+                        \STATE $min_1 = temp$
+                        \STATE $a_1 = a$
+                    \ENDIF
+                \ENDIF
+            \ENDFOR
+            
+            \FOR{$a=j-1$ \TO $0$}
+                \STATE $temp_1,temp = 0$
+                \FOR{$b=a$ \TO $j$}
+                    \STATE $temp_1 += B[b].peso$
+                \ENDFOR
+                \IF{$M[i-1][a-1].w == inf$}
+                    \STATE $M[i-1][a-1] = \textsc{Min-Matching-Memoizado}(A,B,i-1,a-1)$                                                     \algcost{$c1$}{$1$}
+                    \STATE $temp = M[i-1][a-1].w + (A[i].peso/temp_1)$
+                    \IF{$temp < min_2$}
+                        \STATE $min_2 = temp$
+                        \STATE $a_2 = a$
+                    \ENDIF
+                \ELSE
+                    \STATE $temp = M[i-1][a-1].w + (A[i].peso/temp_1)$
+                    \IF{$temp < min_2$}
+                        \STATE $min_2 = temp$
+                        \STATE $a_2 = a$
+                    \ENDIF
+                \ENDIF
+            \ENDFOR
+            
+            \IF{$M[i][j].w = inf$}
+                \STATE $M[i][j] = \textsc{Min-Matching-Memoizado}(A,B,i-1,j-1)$
+                \STATE $min_3 = M[i][j].w + (A[i].peso/B[j].peso)$
+            \ELSE
+                \STATE $min_3 = M[i][j].w + (A[i].peso/B[j].peso)$
+            \ENDIF
+            
+            \STATE $cond = 0$
+            \STATE $min = min_1$
+            \IF{$min > min_2$}
+                \STATE $min = min_2$
+                \STATE $cond = 1$
+            \ELSIF{$min > min_3$}
+                \STATE $min = min_3$
+                \STATE $cond = 2$
+            \ENDIF
+            
+            \SWITCH{$cond$}
+            \CASE{$0$}                                                     
+                \STATE $M[i][j].match = M[a_1-1][j-1].match$
+                \FOR{$a=a_1$ \TO $i$}
+                    \STATE $M[i][j].match = M[i][j].match \cup (A[a],B[j])$
+                \ENDFOR
+                \STATE \textbf{break}
+            \ENDCASE
+            \CASE{$1$}                                                     
+                \STATE $M[i][j].match = M[i-1][a_2-1].match$
+                \FOR{$a=a_2$ \TO $j$}
+                    \STATE $M[i][j].match = M[i][j].match \cup (A[i],B[a])$
+                \ENDFOR
+                \STATE \textbf{break}
+            \ENDCASE
+            \CASE{$2$}                                                     
+                \STATE $M[i][j].match = M[i-1][j-1].match$
+                \STATE $M[i][j].match = M[i][j].match \cup (A[i],B[j])$
+                \STATE \textbf{break}
+            \ENDCASE
+            \STATE $M[i][j].w = min$
+            \RETURN $M[i][j]$
+        \ELSE
+            \RETURN $M[i][j]$
+        \ENDIF
+    \ENDIF
+\end{algorithmic}
+
+Como podemos ver la ejecución del algoritmo anterior es lineal hasta el punto que se llama recursivamente para poder conseguir el valor de una entrada de la matriz M. Esto quiere decir que el tiempo de ejecución del algoritmo recae en la cantidad de llamadas a una línea de código que asigne un valor a la entrada de la matriz llamando recursivamente a la función (es decir, líneas 38,53,64). El número más alto de veces que se pueden llamar a estas líneas de código es $n \cdot m$, ya que la matriz M no tiene más espacio y el algoritmo verifica si un valor ya existe en dentro de cualquier entrada antes de asignar uno nuevo.
+
+Entonces, podemos afirmar que el tiempo de ejecución de este algoritmo es $O(mn)$.
+
+\end{document}
