@@ -20,7 +20,7 @@
 % end of hack
 %imitando para if
 \renewcommand{\algorithmicthen}{\setbox\fixbox\hbox{\ {}}\hskip-\wd\fixbox}
-\newcommand{\algcost}[2]{\strut\hfill\makebox[1.5cm][l]{#1}\makebox[2cm][l]{#2}}
+\newcommand{\algcost}[2]{\strut\hfill\makebox[4cm][l]{#1}\makebox[0.5cm][l]{#2}}
 
 \usepackage{hyperref}
 \hypersetup{
@@ -538,5 +538,389 @@ Se debe tomar en cuenta que $A[i].peso$ o $B[j].peso$ y las declaraciones pareci
 Como podemos ver la ejecución del algoritmo anterior es lineal hasta el punto que se llama recursivamente para poder conseguir el valor de una entrada de la matriz M. Esto quiere decir que el tiempo de ejecución del algoritmo recae en la cantidad de llamadas a una línea de código que asigne un valor a la entrada de la matriz llamando recursivamente a la función (es decir, líneas 38,53,64). El número más alto de veces que se pueden llamar a estas líneas de código es $n \cdot m$, ya que la matriz M no tiene más espacio y el algoritmo verifica si un valor ya existe en dentro de cualquier entrada antes de asignar uno nuevo.
 
 Entonces, podemos afirmar que el tiempo de ejecución de este algoritmo es $O(mn)$.
+
+\newpage
+\subsection*{Pregunta 5 (Programación Dinámica)}
+
+Implementación: ver anexo o github Secuencias/Pregunta5.cpp\vspace{5mm}
+
+Para este algoritmo se volverá a usar el struct y la función que calcula los bloques igual que se usó en la anterior pregunta solo que esta vez se llamará \textsc{Min-Matching-Prod-Din}.
+
+Al igual que el algoritmo anterior se partirá este algoritmo en dos algoritmos, el primero calculará los bloques dentro de los arreglos dados y el segundo hará el cálculo del matching.
+
+M será la matriz donde se guarden los valores ya calculados. Este guardara los structs values que se mencionaron anteriormente. Además, ahora tendremos dos matrizes extra que calculan los valores se las sumas de los bloques, estas son $M_1$ y $M_2$.
+Se debe tomar en cuenta que $A[i].peso$ o $B[j].peso$ y las declaraciones parecidas calculan $A[i].second-B[i].first+1$ o $B[j].second-B[j].first+1$ respectivamente.
+
+\begin{algorithmic}[1]
+    \REQUIRE Dos arreglos A y B con los pesos de los bloques y sus tamaños respectivos.
+    \ENSURE Matching mínimo entre los dos arreglos y su peso.
+    \TITLE{\textsc{Min-Matching-Prod-Din}$(A,B,i,j)$}
+    \FOR{$\_j = 0$ \TO {$j$}}
+        \STATE $temp = 0$
+        \FOR{$a = 0$ \TO $\_j$}
+            \STATE $temp += B[a].peso$
+            \STATE $M[0][\_j].match = M[0][\_j].match \cup (A[0],B[a])$
+        \ENDFOR
+        \STATE $M[0][\_j].peso = A[0].peso / temp$
+    \ENDFOR
+    
+    \FOR{$\_i = 0$ \TO {$i$}}
+        \STATE $temp = 0$
+        \FOR{$a = 0$ \TO $\_i$}
+            \STATE $temp += A[a].peso$
+            \STATE $M[\_i][0].match = M[\_i][0].match \cup (A[a],B[0])$
+        \ENDFOR
+        \STATE $M[\_i][0].peso = temp / B[0].peso$
+    \ENDFOR
+    
+    \STATE $M[0][0].match = (A[0], B[0])$
+    \STATE $M[0][0].peso = A[0].peso / B[0].peso$
+    
+    \FOR{$\_i = 0$ \TO $i$}
+        \STATE $first\_it = false$
+        \FOR{$a = \_i$ \TO $0$}
+            \IF{$first\_it == false$}
+                \STATE $M\_1[\_i][a] = A[a].peso$
+                \STATE $first\_it = true$
+            \ELSE
+                \STATE $M\_1[\_i][a] = M\_1[\_i][a + 1] + (A[a].peso)$
+            \ENDIF
+        \ENDFOR
+    \ENDFOR
+    \FOR{$\_j = 0$ \TO $j$}
+        \STATE $first\_it = false$
+        \FOR{$a = \_j$ \TO $0$}
+            \IF{$first\_it == false$}
+                \STATE $M\_2[\_j][a] = B[a].peso$
+                \STATE $first\_it = true$
+            \ELSE
+                \STATE $M\_2[\_i][a] = M\_2[\_i][a + 1] + (B[a].peso)$
+            \ENDIF
+        \ENDFOR
+    \ENDFOR
+    
+    \FOR{$\_i = 1$ \TO $i$}
+        \FOR{$\_j = 1$ \TO $j$}
+            \STATE $min_1, min_2, min_3 = inf$
+            \STATE $temp, temp_1 = 0$
+            \STATE $a_1, a_2 = 0$
+            
+            \FOR{$a = \_i - 1$ \TO $0$}
+                \STATE $temp_1 = M_1[\_i][a]$
+                \STATE $temp = M[a - 1][\_j - 1].peso + temp_1 / B[\_j].peso$
+                \IF{$temp < min_1$}
+                    \STATE $min_1 = temp$
+                    \STATE $a_1 = a$
+                \ENDIF
+            \ENDFOR
+            
+            \FOR{$a = \_j - 1$ \TO $0$}
+                \STATE $temp_1 = M_2[\_j][a]$
+                \STATE $temp = M[\_i - 1][a - 1].peso + A[\_i].peso / temp_1$
+                \IF{$temp < min_2$}
+                    \STATE $min_1 = temp$
+                    \STATE $a_2 = a$
+                \ENDIF
+            \ENDFOR
+            
+            \STATE $min_3 = M[\_i - 1][\_j - 1].peso + A[\_i].peso / B[\_j].peso$
+            
+            \STATE $cond = 0$
+            \STATE $min = min_1$
+            \IF{$min > min_2$}
+                \STATE $min = min_2$
+                \STATE $cond = 1$
+            \ELSIF{$min > min_3$}
+                \STATE $min = min_3$
+                \STATE $cond = 2$
+            \ENDIF
+            
+            \SWITCH{$cond$}
+            \CASE{$0$}                                                     
+                \STATE $M[\_i][\_j].match = M[a_1-1][\_j-1].match$
+                \FOR{$a=a_1$ \TO $i$}
+                    \STATE $M[\_i][\_j].match = M[\_i][\_j].match \cup (A[a],B[\_j])$
+                \ENDFOR
+                \STATE \textbf{break}
+            \ENDCASE
+            \CASE{$1$}                                                     
+                \STATE $M[\_i][\_j].match = M[\_i-1][a_2-1].match$
+                \FOR{$a=a_2$ \TO $j$}
+                    \STATE $M[\_i][\-j].match = M[\_i][\_j].match \cup (A[\_i],B[a])$
+                \ENDFOR
+                \STATE \textbf{break}
+            \ENDCASE
+            \CASE{$2$}                                                     
+                \STATE $M[\_i][\_j].match = M[\_i-1][\_j-1].match$
+                \STATE $M[\_i][\_j].match = M[\_i][\_j].match \cup (A[\_i],B[\_j])$
+                \STATE \textbf{break}
+            \ENDCASE
+            \STATE $M[\_i][\_j].w = min$
+            \RETURN $M[\_i][\_j]$
+        \ENDFOR
+    \ENDFOR
+    \RETURN $M[i][j]$
+\end{algorithmic}
+
+Este algoritmo es el mismo algoritmo anterior (\textsc{Min-Matching-Memoizado}) escrito de forma iterativa. La diferencia es que dentro de los loops de líneas 31 y 32, que es donde se calcula el min matching, es necesario tomar en cuenta todas las anteriores respuestas para poder calcular el matching con menor peso. Gracias a esto, tenemos otro loop dentro de esos dos loops de las lineas 31 y 32, esta es la diferencia más significativa entre este algoritmo y \textsc{Min-Matching-Memoizado}. Por ende, eso hace que el algoritmo sea de tiempo de ejecución cúbico. Entonces este algoritmo es $O(max(m,n)^3)$
+
+\newpage
+\section{Transformación de Imágenes}
+\subsection*{Pregunta 6 (Transformación Voraz)}
+
+Implementación: ver anexo o github Transformacion/Pregunta6.cpp
+
+Para este algoritmo se usará la función \textsc{Min-Matching} que se presentó anteriormente. Por ende, esa función no se volverá a copiar.
+
+\begin{algorithmic}[1]
+    \REQUIRE Dos matrices A y B de 1's y 0's.
+    \ENSURE Una transformación de A a B no necesariamente óptima.
+    \TITLE{\textsc{Transformacion-Voraz}$(A, B)$}                               \algcost{\textit{cost}}{\textit{times}}
+    \STATE $M = \emptyset$                                                      \algcost{$c_1$}{$1$}
+    \STATE $peso\_total = 0$                                                    \algcost{$c_2$}{$1$}
+    \FOR{$i = 0$ \TO $A.size$                                                   \algcost{$c_3$}{$p$}}
+        \STATE $min\_matching = \textsc{Min-Matching}(A[i],B[i], A[i].size)$    \algcost{$O(max(n,m))$}{$p-1$}
+        \STATE $M = M \cup min\_matching.first$                                 \algcost{$c_4$}{$p-1$}
+        \STATE $peso\_total += min\_matching.second$                            \algcost{$c_5$}{$p-1$}
+    \ENDFOR
+    \RETURN $(M, peso\_total)$
+\end{algorithmic}
+
+Para el análisis de tiempo consideramos las matrices A y B, sean de la forma $(p\times q)$.
+
+Sumando los tiempos en peor caso tenemos:
+$$c_1+c_2+c_3*p+O(max(n,m))*(p-1)+c_4*(p-1)+c_5*(p-1)$$
+Sabemos que $O(max(n,m)) \leq q$, entonces:
+$$c_1+c_2+c_3*p+q*(p-1)+c_4*(p-1)+c_5*(p-1)$$
+De esto podemos afirmar que:
+$$= O(pq)$$
+
+\newpage
+\subsection*{Pregunta 7 (Transformación Prog. Dinámica)}
+
+Implementación: ver anexo o github Transformacion/Pregunta7.cpp
+
+Este algoritmo es igual al anterior solo que esta vez se llama a la función \textsc{Min-Matching-Prog-Din}. Esta función es la que calcula los bloques de cada vector y después llama al a función con el mismo nombre pero que recibe los parametros de los bloques una vez calculados, que se presentó anteriormente. Por ende, esa función no se volverá a copiar.
+
+\begin{algorithmic}[1]
+    \REQUIRE Dos matrices A y B de 1's y 0's.
+    \ENSURE Una transformación de A a B no necesariamente óptima.
+    \TITLE{\textsc{Transformacion-Prod-Din}$(A, B)$}                                    \algcost{\textit{cost}}{\textit{times}}
+    \STATE $M = \emptyset$                                                              \algcost{$c_1$}{$1$}
+    \STATE $peso\_total = 0$                                                            \algcost{$c_2$}{$1$}
+    \FOR{$i = 0$ \TO $A.size$                                                           \algcost{$c_3$}{$p$}}
+        \STATE $min\_matching=$
+            
+            $\textsc{Min-Matching-Prog-Din}(A[i],B[i], A[i].size)$                      \algcost{$O(max(n,m)^3)$}{$p-1$}
+        \STATE $M = M \cup min\_matching.first$                                         \algcost{$c_4$}{$p-1$}  
+        \STATE $peso\_total += min\_matching.second$                                    \algcost{$c_5$}{$p-1$}
+    \ENDFOR
+    \RETURN $(M, peso\_total)$
+\end{algorithmic}
+
+Sumando los tiempos en peor caso tenemos:
+$$c_1+c_2+c_3*p+O(max(n,m)^3)*(p-1)+c_4*(p-1)+c_5*(p-1)$$
+Sabemos que $O(max(n,m)^3) \leq q^3$, entonces:
+$$c_1+c_2+c_3*p+q^3*(p-1)+c_4*(p-1)+c_5*(p-1)$$
+De esto podemos afirmar que:
+$$= O(pq^3)$$
+
+\newpage
+\subsection*{Pregunta 8 (Lectura de Imágenes)}
+
+Implementación: ver anexo o github Transformacion/Pregunta8.cpp
+
+\subsection*{Pregunta 9 (Animación)}
+
+Implementación: ver anexo o github Transformacion/Pregunta9.cpp
+
+\newpage
+\subsection*{Pregunta 10 (Transformación Prog. Dinámica Promedio)}
+
+Implementación: ver anexo o github Transformacion/Pregunta10.cpp
+
+Para este algoritmo es necesario cambiar la función que calcula el min matching para poder tomar en cuenta el peso promedio. Por ende, a pesar de solo cambiar pocas línas de código comparado con la funcióñ \textsc{Min-Matching-Prog-Din}, se copiará la función de nuevo. Además, también son necesarios algunos cambios en la función de calcular los bloques, y entonces también se volverá a copiar esa función a pesar de ser pocos los cambios
+
+\begin{algorithmic}[1]
+    \REQUIRE Dos arreglos de unos y ceros A y B con tamaño p
+    \ENSURE Matching entre los dos arreglos y el peso promedio del mismo
+    \TITLE{\textsc{Min-Matching-Promedio-Prog-Din}$(A,B,p)$}                                                 
+    \STATE $M_1,M_2$ \COMMENT{\textit{Estos arreglos guardaran los bloques}}        
+    \STATE $n_1 = -1$                                                               
+    \STATE $m_2 = -1$                                                               
+    \STATE $\_i,\_j = 0$                                                            
+    \FOR{$i=0$ \TO $p$}                                
+        \IF{$A[i] == 1$ \AND $n_1 == -1$}                                
+            \STATE $n_1 = i$                                                        
+        \ELSIF{$A[i] == 0$ \AND $n_1 \neq -1$}                                 
+            \STATE $M_1.push\_back(<n_1,i-1>)$                
+            \STATE $n_1 = -1$                                          
+            \STATE $\_i += 1$                                          
+        \ENDIF
+        \IF{$i == p - 1$ \AND $A[i] == 1$ \AND $n_1 \neq -1$}
+            \STATE $M_1.push\_back(<n_1,i-1>)$                              
+            \STATE $\_i += 1$                                               
+        \ELSIF{$i == p - 1$ \AND $A[i] == 1$ \AND $n_1 == -1$}
+            \STATE $M_1.push\_back(<i-1,i-1>)$                       
+            \STATE $\_i += 1$                                                      
+        \ENDIF
+        \IF{$B[i] == 1$ \AND $m_1 == -1$}
+            \STATE $m_1 = i$                                             
+        \ELSIF{$B[i] == 0$ \AND $m_1 \neq -1$}
+            \STATE $M_2.push\_back(<m_1,i-1>)$                      
+            \STATE $m_1 = -1$               
+            \STATE $\_j += 1$  
+        \ENDIF
+        \IF{$i == p - 1$ \AND $B[i] == 1$ \AND $m_1 \neq -1$}
+            \STATE $M_2.push\_back(<m_1,i-1>)$                                
+            \STATE $\_j += 1$                                                  
+        \ELSIF{$i == p - 1$ \AND $B[i] == 1$ \AND $m_1 == -1$}
+            \STATE $M_2.push\_back(<i-1,i-1>)$ 
+            \STATE $\_j += 1$  
+        \ENDIF
+    \ENDFOR
+    
+    \STATE $sum\_M1, sum\_M2 = 0$
+    \FOR{$i = 0$ \TO $M1.size$}
+        \STATE $sum\_M1 = M1[i].peso$
+    \ENDFOR
+    \FOR{$i = 0$ \TO $M2.size$}
+        \STATE $sum\_M2 = M2[i].peso$
+    \ENDFOR
+    \STATE $mu = sum\_M1 / sum\_M2$
+    
+    \RETURN $\textsc{Min-Matching-Promedio-Prog-Din}(M_1,M_2,\_i-1,\_j-1, mu)$
+\end{algorithmic}
+
+\begin{algorithmic}[1]
+    \REQUIRE Dos arreglos A y B con los pesos de los bloques y sus tamaños respectivos.
+    \ENSURE Matching promedio entre los dos arreglos y su peso.
+    \TITLE{\textsc{Min-Matching-Promedio-Prod-Din}$(A,B,i,j,mu)$}
+    \FOR{$\_j = 0$ \TO {$j$}}
+        \STATE $temp = 0$
+        \FOR{$a = 0$ \TO $\_j$}
+            \STATE $temp += B[a].peso$
+            \STATE $M[0][\_j].match = M[0][\_j].match \cup (A[0],B[a])$
+        \ENDFOR
+        \STATE $M[0][\_j].peso = |(A[0].peso / temp) - mu|$
+    \ENDFOR
+    
+    \FOR{$\_i = 0$ \TO {$i$}}
+        \STATE $temp = 0$
+        \FOR{$a = 0$ \TO $\_i$}
+            \STATE $temp += A[a].peso$
+            \STATE $M[\_i][0].match = M[\_i][0].match \cup (A[a],B[0])$
+        \ENDFOR
+        \STATE $M[\_i][0].peso = |(temp / B[0].peso) - mu|$
+    \ENDFOR
+    
+    \STATE $M[0][0].match = (A[0], B[0])$
+    \STATE $M[0][0].peso = |(A[0].peso / B[0].peso) - mu|$
+    
+    \FOR{$\_i = 0$ \TO $i$}
+        \STATE $first\_it = false$
+        \FOR{$a = \_i$ \TO $0$}
+            \IF{$first\_it == false$}
+                \STATE $M\_1[\_i][a] = A[a].peso$
+                \STATE $first\_it = true$
+            \ELSE
+                \STATE $M\_1[\_i][a] = M\_1[\_i][a + 1] + (A[a].peso)$
+            \ENDIF
+        \ENDFOR
+    \ENDFOR
+    \FOR{$\_j = 0$ \TO $j$}
+        \STATE $first\_it = false$
+        \FOR{$a = \_j$ \TO $0$}
+            \IF{$first\_it == false$}
+                \STATE $M\_2[\_j][a] = B[a].peso$
+                \STATE $first\_it = true$
+            \ELSE
+                \STATE $M\_2[\_i][a] = M\_2[\_i][a + 1] + (B[a].peso)$
+            \ENDIF
+        \ENDFOR
+    \ENDFOR
+    
+    \FOR{$\_i = 1$ \TO $i$}
+        \FOR{$\_j = 1$ \TO $j$}
+            \STATE $min_1, min_2, min_3 = inf$
+            \STATE $temp, temp_1 = 0$
+            \STATE $a_1, a_2 = 0$
+            
+            \FOR{$a = \_i - 1$ \TO $0$}
+                \STATE $temp_1 = M_1[\_i][a]$
+                \STATE $temp = M[a - 1][\_j - 1].peso + |(temp_1 / B[\_j].peso) - mu|$
+                \IF{$temp < min_1$}
+                    \STATE $min_1 = temp$
+                    \STATE $a_1 = a$
+                \ENDIF
+            \ENDFOR
+            
+            \FOR{$a = \_j - 1$ \TO $0$}
+                \STATE $temp_1 = M_2[\_j][a]$
+                \STATE $temp = M[\_i - 1][a - 1].peso + |(A[\_i].peso / temp_1) - mu|$
+                \IF{$temp < min_2$}
+                    \STATE $min_1 = temp$
+                    \STATE $a_2 = a$
+                \ENDIF
+            \ENDFOR
+            
+            \STATE $min_3 = M[\_i - 1][\_j - 1].peso + |(A[\_i].peso / B[\_j].peso) - mu|$
+            
+            \STATE $cond = 0$
+            \STATE $min = min_1$
+            \IF{$min > min_2$}
+                \STATE $min = min_2$
+                \STATE $cond = 1$
+            \ELSIF{$min > min_3$}
+                \STATE $min = min_3$
+                \STATE $cond = 2$
+            \ENDIF
+            
+            \SWITCH{$cond$}
+            \CASE{$0$}                                                     
+                \STATE $M[\_i][\_j].match = M[a_1-1][\_j-1].match$
+                \FOR{$a=a_1$ \TO $i$}
+                    \STATE $M[\_i][\_j].match = M[\_i][\_j].match \cup (A[a],B[\_j])$
+                \ENDFOR
+                \STATE \textbf{break}
+            \ENDCASE
+            \CASE{$1$}                                                     
+                \STATE $M[\_i][\_j].match = M[\_i-1][a_2-1].match$
+                \FOR{$a=a_2$ \TO $j$}
+                    \STATE $M[\_i][\-j].match = M[\_i][\_j].match \cup (A[\_i],B[a])$
+                \ENDFOR
+                \STATE \textbf{break}
+            \ENDCASE
+            \CASE{$2$}                                                     
+                \STATE $M[\_i][\_j].match = M[\_i-1][\_j-1].match$
+                \STATE $M[\_i][\_j].match = M[\_i][\_j].match \cup (A[\_i],B[\_j])$
+                \STATE \textbf{break}
+            \ENDCASE
+            \STATE $M[\_i][\_j].w = min$
+            \RETURN $M[\_i][\_j]$
+        \ENDFOR
+    \ENDFOR
+    \RETURN $M[i][j]$
+\end{algorithmic}
+
+En las últimas dos funciónes es claro que los cambios hechos no afectan el tiempo de ejecución, ya que en la función de calcular los bloques tenemos dos sentencias \textbf{for} extras de un número menor a $p$, por ende el tiempo de ejecución se mantiene. Y en la función de calcular el min matching en sí solo se cambia el calculo aritmetico del peso y esto no añade ni quita nada al tiempo de ejecución.
+
+\begin{algorithmic}[1]
+    \REQUIRE Dos matrices A y B de 1's y 0's.
+    \ENSURE Una transformación de A a B no necesariamente óptima.
+    \TITLE{\textsc{Transformacion-Promedio-Prog-Din}$(A, B)$}                                   \algcost{\textit{cost}}{\textit{times}}
+    \STATE $M = \emptyset$                                                                      \algcost{$c_1$}{$1$}
+    \STATE $peso\_total = 0$                                                                    \algcost{$c_2$}{$1$}
+    \FOR{$i = 0$ \TO $A.size$                                                                   \algcost{$c_3$}{$p$}}
+        \STATE $min\_matching =$ 
+        
+         $\textsc{Min-Matching-Promedio-Prog-Din}(A[i],B[i], A[i].size)$                        \algcost{$O(max(n,m)^3)$}{$p-1$}
+        \STATE $M = M \cup min\_matching.first$                                                 \algcost{$c_4$}{$p-1$}
+        \STATE $peso\_total += min\_matching.second$                                            \algcost{$c_5$}{$p-1$}
+    \ENDFOR
+    \RETURN $(M, peso\_total)$
+\end{algorithmic}
+
+Como tiempo de ejecución de el algoritmo, \textit{Min-Matching-Promedio-Prog-Din}, que llama esta función es igual al de \textit{Min-Matching-Prog-Din}, eso hace que el analisis de tiempo de este algoritmo sea exactamente igual al analisis de la pregunta 7, entonces podemos afirmar que el tiempo de ejecución es: $O(pq^3)$
 
 \end{document}
