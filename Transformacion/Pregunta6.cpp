@@ -10,7 +10,7 @@ using namespace std;
 pair<vector <pair<pair<int, int>, pair<int, int>>>, double> Min_matching(vector<double> A, vector<double> B, int p) {
 	//Declare final matching vector S and block vectors M1 and M2;
 	vector <pair<pair<int, int>, pair<int, int>>> S;
-	vector <pair<double, double>> M1,M2;
+	vector <pair<double, double>> M1, M2;
 	//Find and save all blocks
 	//Find and save all blocks
 	int n1 = -1;
@@ -49,13 +49,13 @@ pair<vector <pair<pair<int, int>, pair<int, int>>>, double> Min_matching(vector<
 	}
 	//Matching process
 	int i = 0;
-	int j = 0; 
+	int j = 0;
 	double temp = 0.0;
 	double peso = 0.0;
 	double num = 0.0;
 
 	while (i < M1.size() && j < M2.size()) {
-		if (j == M2.size()-1) {
+		if (j == M2.size() - 1) {
 			num = 0.0;
 			while (i < M1.size()) {
 				S.push_back(make_pair(M1[i], M2[j]));
@@ -64,7 +64,7 @@ pair<vector <pair<pair<int, int>, pair<int, int>>>, double> Min_matching(vector<
 			}
 			peso += num / (M2[j].second - M2[j].first + 1);
 		}
-		else if (i == M1.size()-1) {
+		else if (i == M1.size() - 1) {
 			num = 0.0;
 			while (j < M2.size()) {
 				S.push_back(make_pair(M1[i], M2[j]));
@@ -104,42 +104,46 @@ pair<vector <pair<pair<int, int>, pair<int, int>>>, double> Min_matching(vector<
 			j++;
 		}
 	}
-	return make_pair(S,peso);
+	return make_pair(S, peso);
 }
 
+pair< vector< vector< pair <pair<int, int>, pair<int, int>>>>, double> Transformacion_Voraz(vector <vector<double>> A, vector <vector<double>> B) {
+	vector< vector< pair <pair<int, int>, pair<int, int>>>> M;
+	double peso_total = 0.0;
+	pair<vector <pair<pair<int, int>, pair<int, int>>>, double> min_matching;
+
+	for (int i = 0; i < A.size(); i++) {
+		min_matching = Min_matching(A[i], B[i], A[i].size());
+		M.push_back(min_matching.first);
+		peso_total += min_matching.second;
+		cout << "Peso total = " << peso_total << endl;
+	}
+
+	return make_pair(M, peso_total);
+}
 
 int main() {
-	//vector <double> A = { 0,1,1,1,0,0,1,0,1,1,0,1,1,0,1,1,1,0,1,0 };
-	//vector <double> B = { 1,1,0,1,1,1,1,0,1,0,1,1,1,1,1,0,1,1,1,1 };
-	//vector <double> A = { 1,1,1,0,0,1,0,1,1,0,0,0,1,1,1,0,0,1,0,1 };
-	//vector <double> B = { 0,0,0,1,1,0,1,0,1,0,1,0,1,1,0,0,0,0,0,0 };
-	//vector <double> A = { 1,1,0,1,0,0,1,0,1,0,0,1,1,1,0,1,1,0,1,1 };
-	//vector <double> B = { 0,0,1,1,0,1,1,0,0,0,1,1,1,1,1,0,0,1,1,0 };
-	//vector <double> A = { 0,1,1,1,0,0,1,0,1,1,0,1,1,0,1,1,1,0,1,0 };
-	//vector <double> B = { 0,0,1,1,0,1,1,0,0,0,1,1,1,1,1,0,0,1,1,0 };
-	
-	std::string s1;
-	std::string s2;
+	vector <vector<double>> A = {{ 0,1,1,1,0,0,1,0,1,1,0,1,1,0,1,1,1,0,1,0 },
+								 { 1,1,1,0,0,1,0,1,1,0,0,0,1,1,1,0,0,1,0,1 },
+								 { 1,1,0,1,0,0,1,0,1,0,0,1,1,1,0,1,1,0,1,1 },
+								 { 0,1,1,1,0,0,1,0,1,1,0,1,1,0,1,1,1,0,1,0 }};
 
-	cout << "Insert the array A with spaces between the elements: " << endl;
-	std::getline(cin, s1);
-	cout << "Insert the array B with spaces between the elements: " << endl;
-	std::getline(cin, s2);
+	vector <vector<double>> B = {{ 1,1,0,1,1,1,1,0,1,0,1,1,1,1,1,0,1,1,1,1 },
+								 { 0,0,0,1,1,0,1,0,1,0,1,0,1,1,0,0,0,0,0,0 },
+								 { 0,0,1,1,0,1,1,0,0,0,1,1,1,1,1,0,0,1,1,0 },
+								 { 0,0,1,1,0,1,1,0,0,0,1,1,1,1,1,0,0,1,1,0 }};
 
-	std::istringstream is_1(s1);
-	std::istringstream is_2(s2);
-
-	std::vector<double> A((std::istream_iterator<int>(is_1)), std::istream_iterator<int>());
-	std::vector<double> B((std::istream_iterator<int>(is_2)), std::istream_iterator<int>());
-	
-	pair< vector <pair<pair<int, int>, pair<int, int>>>, double > Matching = Min_matching(A, B, A.size());
-	vector <pair<pair<int, int>, pair<int, int>>> S = Matching.first;
-	cout << "Matching : " << endl;
-	for (int i = 0; i < S.size(); i++) {
-		cout << "(" << S[i].first.first << "," << S[i].first.second << ")-(" << S[i].second.first << "," << S[i].second.second << ") ";
+	pair< vector< vector< pair <pair<int, int>, pair<int, int>>>>, double> TV = Transformacion_Voraz(A, B);
+	vector< vector< pair <pair<int, int>, pair<int, int>>>> M = TV.first;
+	cout << "Matchings = " << endl;
+	for (int i = 0; i < M.size(); i++) {
+		for (int j = 0; j < M[i].size(); j++) {
+			cout << "(" << M[i][j].first.first << "," << M[i][j].first.second << ")-(" << M[i][j].second.first << "," << M[i][j].second.second << ") ";
+		}
+		cout << endl;
 	}
 	cout << endl;
-	cout << "Peso = " << Matching.second;
+	cout << "Peso = " << TV.second << endl;
 
 	return 0;
 }

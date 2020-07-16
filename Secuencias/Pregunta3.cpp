@@ -118,11 +118,13 @@ values Opt(vector <double> A, vector <double> B, int p) {
             _i++;
         }
         if (i == p - 1 && A[i] == 1 && n1 != -1) {
-            M1.push_back(make_pair(n1, i - 1));
+            //M1.push_back(make_pair(n1, i - 1));
+            M1.push_back(make_pair(n1, i));
             _i++;
         }
         else if (i == p - 1 && A[i] == 1 && n1 == -1) {
-            M1.push_back(make_pair(i - 1, i - 1));
+            //M1.push_back(make_pair(i - 1, i - 1));
+            M1.push_back(make_pair(i, i));
             _i++;
         }
         if (B[i] == 1 && m1 == -1) {
@@ -134,11 +136,13 @@ values Opt(vector <double> A, vector <double> B, int p) {
             _j++;
         }
         if (i == p - 1 && B[i] == 1 && m1 != -1) {
-            M2.push_back(make_pair(m1, i - 1));
+            //M2.push_back(make_pair(m1, i - 1));
+            M2.push_back(make_pair(m1, i));
             _j++;
         }
         else if (i == p - 1 && B[i] == 1 && m1 == -1) {
-            M2.push_back(make_pair(i - 1, i - 1));
+            //M2.push_back(make_pair(i - 1, i - 1));
+            M2.push_back(make_pair(i, i));
             _j++;
         }
     }
@@ -153,7 +157,7 @@ int main() {
     //vector <double> B = { 1,1,0,1,1,1,1,0,1,0,1,1,1,1,1,0,1,1,1,1 };
     //vector <double> A = { 1,1,1,0,0,1,0,1,1,0,0,0,1,1,1,0,0,1,0,1 };
     //vector <double> B = { 0,0,0,1,1,0,1,0,1,0,1,0,1,1,0,0,0,0,0,0 };
-
+    
     std::string s1;
     std::string s2;
 
@@ -167,7 +171,7 @@ int main() {
 
     std::vector<double> A((std::istream_iterator<int>(is_1)), std::istream_iterator<int>());
     std::vector<double> B((std::istream_iterator<int>(is_2)), std::istream_iterator<int>());
-
+    
     values Matching = Opt(A, B, A.size());
     vector <pair<pair<int, int>, pair<int, int>>> S = Matching.match;
     cout << "Matching : " << endl;
@@ -176,4 +180,6 @@ int main() {
     }
     cout << endl;
     cout << "Peso = " << Matching.w;
+
+    return 0;
 }

@@ -18,156 +18,123 @@ vector<vector<values>> M;
 vector<vector<int>> M_1;
 vector<vector<int>> M_2;
 
-values Min_Matching_Memoizado(vector <pair<double, double>>& A, vector <pair<double, double>>& B, int i, int j) {
-    if (i == 0 && j > 0) {
-        if (M[i][j].w == numeric_limits<double>::max()) {
-            double temp = 0;
-            for (int a = 0; a <= j; a++) {
-                temp += B[a].second - B[a].first + 1;
-                M[i][j].match.push_back(make_pair(A[i], B[a]));
+values Min_Matching_Prog_Din(vector <pair<double, double>>& A, vector <pair<double, double>>& B, int i, int j) {
+    //Case : i == 0 && j > 0
+    for (int _j = 0; _j < j; _j++) {
+        double temp = 0;
+        for (int a = 0; a <= _j; a++) {
+            temp += B[a].second - B[a].first + 1;
+            M[0][_j].match.push_back(make_pair(A[0], B[a]));
+        }
+        M[0][_j].w = (A[0].second - A[0].first + 1) / temp;
+    }
+    //Case : i > 0 && j == 0
+    for (int _i = 0; _i < i; _i++) {
+        double temp = 0;
+        for (int a = 0; a <= _i; a++) {
+            temp += A[a].second - A[a].first + 1;
+            M[_i][0].match.push_back(make_pair(A[a], B[0]));
+        }
+        M[_i][0].w = temp / (B[0].second - B[0].first + 1);
+    }
+
+    //Case : i == 0 && j == 0
+    M[0][0].match.push_back(make_pair(A[0], B[0]));
+    M[0][0].w = (A[0].second - A[0].first + 1) / (B[0].second - B[0].first + 1);
+
+    //Fill Other Two Matrixes
+    for (int _i = 0; _i <= i; _i++) {
+        bool first_iter = false;
+        for (int a = _i; a >= 0; a--) {
+            if (first_iter == false) {
+                M_1[_i][a] = (A[a].second - A[a].first + 1);
+                first_iter = true;
             }
-            M[i][j].w = (A[i].second - A[i].first + 1) / temp;
-            return M[i][j];
-        }
-        else {
-            return M[i][j];
-        }
-    }
-    else if (i > 0 && j == 0) {
-        if (M[i][j].w == numeric_limits<double>::max()) {
-            double temp = 0;
-            for (int a = 0; a <= i; a++) {
-                temp += A[a].second - A[a].first + 1;
-                M[i][j].match.push_back(make_pair(A[a], B[j]));
+            else {
+                M_1[_i][a] = M_1[_i][a + 1] + (A[a].second - A[a].first + 1);
             }
-            M[i][j].w = temp / (B[j].second - B[j].first + 1);
-            return M[i][j];
-        }
-        else {
-            return  M[i][j];
         }
     }
-    else if (i == 0 && j == 0) {
-        if (M[i][j].w == numeric_limits<double>::max()) {
-            M[i][j].match.push_back(make_pair(A[i], B[j]));
-            M[i][j].w = (A[i].second - A[i].first + 1) / (B[j].second - B[j].first + 1);
-            return M[i][j];
-        }
-        else { 
-            return M[i][j]; 
+    for (int _j = 0; _j <= j; _j++) {
+        bool first_iter = false;
+        for (int a = _j - 1; a >= 0; a--) {
+            if (first_iter == false) {
+                M_2[_j][a] = (B[a].second - B[a].first + 1);
+                first_iter = true;
+            }
+            else {
+                M_2[_j][a] = M_2[_j][a + 1] + (B[a].second - B[a].first + 1);
+            }
         }
     }
-    else if (i > 0 && j > 0) {
-        if (M[i][j].w == numeric_limits<double>::max()) {
+
+    //Case : i > 0 && j > 0
+    for (int _i = 1; _i <= i; _i++) {
+        for (int _j = 1; _j <= j; _j++) {
             double min_1 = numeric_limits<double>::max();
             double min_2 = numeric_limits<double>::max();
             double min_3 = numeric_limits<double>::max();
             double temp = 0;
             double temp_1 = 0;
             int a_1 = 0; int a_2 = 0;
-            for (int a = i - 1; a > 0; a--) {
+
+            for (int a = _i - 1; a > 0; a--) {
                 temp_1 = 0;
                 temp = 0;
 
-                if (M_1[i][a] == numeric_limits<int>::max()) {
-                    for (int b = a; b <= i; b++) {
-                        temp_1 += A[b].second - A[b].first + 1;
-                    }
-                    M_1[i][a] = temp_1;
-                }
-                else {
-                    temp_1 = M_1[i][a];
-                }
+                temp_1 = M_1[_i][a];
 
-                if (M[a - 1][j - 1].w == numeric_limits<double>::max()) {
-                    M[a - 1][j - 1] = Min_Matching_Memoizado(A, B, a - 1, j - 1);
-                    temp = M[a - 1][j - 1].w + (temp_1 / (B[j].second - B[j].first + 1));
-                    if (temp < min_1) {
-                        min_1 = temp;
-                        a_1 = a;
-                    }
-                }
-                else {
-                    temp = M[a - 1][j - 1].w + (temp_1 / (B[j].second - B[j].first + 1));
-                    if (temp < min_1) {
-                        min_1 = temp;
-                        a_1 = a;
-                    }
+                temp = M[a - 1][_j - 1].w + (temp_1 / (B[_j].second - B[_j].first + 1));
+                if (temp < min_1) {
+                    min_1 = temp;
+                    a_1 = a;
                 }
             }
 
-            for (int a = j - 1; a > 0; a--) {
+            for (int a = _j - 1; a > 0; a--) {
                 temp_1 = 0;
                 temp = 0;
 
-                if (M_2[j][a] == numeric_limits<int>::max()) {
-                    for (int b = a; b <= j; b++) {
-                        temp_1 += B[b].second - B[b].first + 1;
-                    }
-                    M_2[j][a] = temp_1;
-                }
-                else {
-                    temp_1 = M_2[j][a];
-                }
-                
-                if (M[i - 1][a - 1].w == numeric_limits<double>::max()) {
-                    M[i - 1][a - 1] = Min_Matching_Memoizado(A, B, i - 1, a - 1);
-                    temp = M[i - 1][a - 1].w + ((A[i].second - A[i].first + 1) / temp_1);
-                    if (temp < min_2) {
-                        min_2 = temp;
-                        a_2 = a;
-                    }
-                }
-                else {
-                    temp = M[i - 1][a - 1].w + ((A[i].second - A[i].first + 1) / temp_1);
-                    if (temp < min_2) {
-                        min_2 = temp;
-                        a_2 = a;
-                    }
+                temp_1 = M_2[_j][a];
+
+                temp = M[_i - 1][a - 1].w + ((A[_i].second - A[_i].first + 1) / temp_1);
+                if (temp < min_2) {
+                    min_2 = temp;
+                    a_2 = a;
                 }
             }
 
-            if (M[i - 1][j - 1].w == numeric_limits<double>::max()) {
-                M[i - 1][j - 1] = Min_Matching_Memoizado(A, B, i - 1, j - 1);
-                min_3 = M[i - 1][j - 1].w + ((A[i].second - A[i].first + 1) / (B[j].second - B[j].first + 1));
-            }
-            else {
-                min_3 = M[i - 1][j - 1].w + ((A[i].second - A[i].first + 1) / (B[j].second - B[j].first + 1));
-            }
-            
+            min_3 = M[_i - 1][_j - 1].w + ((A[_i].second - A[_i].first + 1) / (B[_j].second - B[_j].first + 1));
+
             int cond = 0;
             double min = min_1;
             if (min > min_2) { min = min_2; cond = 1; }
             else if (min > min_3) { min = min_3; cond = 2; }
             switch (cond) {
             case 0:
-                M[i][j].match = M[a_1 - 1][j - 1].match;
-                for (int a = a_1; a <= i; a++) {
-                    M[i][j].match.push_back(make_pair(A[a], B[j]));
+                M[_i][_j].match = M[a_1 - 1][_j - 1].match;
+                for (int a = a_1; a <= _i; a++) {
+                    M[_i][_j].match.push_back(make_pair(A[a], B[_j]));
                 }
                 break;
             case 1:
-                M[i][j].match = M[i - 1][a_2 - 1].match;
-                for (int a = a_2; a <= j; a++) {
-                    M[i][j].match.push_back(make_pair(A[i], B[a]));
+                M[_i][_j].match = M[_i - 1][a_2 - 1].match;
+                for (int a = a_2; a <= _j; a++) {
+                    M[_i][_j].match.push_back(make_pair(A[_i], B[a]));
                 }
                 break;
             case 2:
-                M[i][j].match = M[i - 1][j - 1].match;
-                M[i][j].match.push_back(make_pair(A[i], B[j]));
+                M[_i][_j].match = M[_i - 1][_j - 1].match;
+                M[_i][_j].match.push_back(make_pair(A[_i], B[_j]));
                 break;
             }
-            M[i][j].w = min;
-            return M[i][j];
-        }
-        else {
-            return M[i][j];
+            M[_i][_j].w = min;
         }
     }
+    return M[i][j];
 }
 
-
-values Min_Matching_Memoizado(vector <double> A, vector <double> B, int p) {
+values Min_Matching_Prog_Din(vector <double> A, vector <double> B, int p) {
     vector <pair<double, double>> M1, M2;
     //Find and save all blocks
     int n1 = -1;
@@ -242,9 +209,8 @@ values Min_Matching_Memoizado(vector <double> A, vector <double> B, int p) {
             M_2[i][j] = numeric_limits<int>::max();
         }
     }
-    return Min_Matching_Memoizado(M1, M2, _i - 1, _j - 1);
+    return Min_Matching_Prog_Din(M1, M2, _i - 1, _j - 1);
 }
-
 
 int main() {
     // TEST VECTORS
@@ -267,7 +233,8 @@ int main() {
     std::vector<double> A((std::istream_iterator<int>(is_1)), std::istream_iterator<int>());
     std::vector<double> B((std::istream_iterator<int>(is_2)), std::istream_iterator<int>());
     
-    values Matching = Min_Matching_Memoizado(A, B, A.size());
+    
+    values Matching = Min_Matching_Prog_Din(A, B, A.size());
     vector <pair<pair<int, int>, pair<int, int>>> S = Matching.match;
     cout << "Matching : " << endl;
     for (int i = 0; i < S.size(); i++) {
@@ -300,7 +267,7 @@ int main() {
         }
         cout << endl;
     }
-    
+
     return 0;
 
 }
