@@ -663,6 +663,29 @@ pair < vector< vector<pair<pair<int, int>, pair<int, int>>>>, double> Transforma
 //                                                                     ANIMACION                                                                   //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+vector<pair<double, double>> Find_Zeros(vector<double> A, int p) {
+    vector <pair<double, double>> M1;
+    //Find and save all blocks
+    int n1 = -1;
+    for (int i = 0; i < p; i++) {
+        if (A[i] == 0 && n1 == -1) {
+            n1 = i;
+        }
+        else if (A[i] == 1 && n1 != -1) {
+            M1.push_back(make_pair(n1, i - 1));
+            n1 = -1;
+        }
+        if (i == p - 1 && A[i] == 0 && n1 != -1) {
+            M1.push_back(make_pair(n1, i));
+        }
+        else if (i == p - 1 && A[i] == 0 && n1 == -1) {
+            M1.push_back(make_pair(i, i));
+        }
+    }
+
+    return M1;
+}
+
 void Animacion(string filename_1, string filename_2, int Tipo_De_Transformacion) {
     //Umbral = 255 / 5
 
@@ -678,8 +701,10 @@ void Animacion(string filename_1, string filename_2, int Tipo_De_Transformacion)
     vector<vector<double>> M_1 = GetImage(filename_1, 0.212, 0.701, 0.087, 255 / 5);
     vector<vector<double>> M_2 = GetImage(filename_2, 0.212, 0.701, 0.087, 255 / 5);
 
+    int rows = M_1.size();
+    int columns = M_1[0].size();
+
     namedWindow("Input", WINDOW_AUTOSIZE);
-    namedWindow("Output", WINDOW_AUTOSIZE);
 
     Mat img_1 = imread(filename_1);
     vector<Mat> int_img;
@@ -701,14 +726,121 @@ void Animacion(string filename_1, string filename_2, int Tipo_De_Transformacion)
         TV = Transformacion_Promedio_Prog_Din(M_1, M_2);
         break;
     default:
-        TV = Transformacion_Prog_Din(M_1, M_2);
-        break;
+        for (int i = 0; i < rows; i++) {
+            for (int _j = 0; _j < columns; _j++) {
+                double B_1 = img_1.at<Vec3b>(i, _j)[0];
+                double G_1 = img_1.at<Vec3b>(i, _j)[1];
+                double R_1 = img_1.at<Vec3b>(i, _j)[2];
+
+                double B_2 = img_2.at<Vec3b>(i, _j)[0];
+                double G_2 = img_2.at<Vec3b>(i, _j)[1];
+                double R_2 = img_2.at<Vec3b>(i, _j)[2];
+
+                double diff_B = (B_2 - B_1) / NUM_INT_IMG;
+                double diff_G = (G_2 - G_1) / NUM_INT_IMG;
+                double diff_R = (R_2 - R_1) / NUM_INT_IMG;
+
+                for (int k = 0; k < NUM_INT_IMG; k++) {
+                    int_img[k].at<Vec3b>(i, _j)[0] = B_1 + (diff_B * (k + 1));
+                    int_img[k].at<Vec3b>(i, _j)[1] = G_1 + (diff_G * (k + 1));
+                    int_img[k].at<Vec3b>(i, _j)[2] = R_1 + (diff_R * (k + 1));
+                }
+            }
+        }
+
+        imshow("Input", img_1);
+        string s_temp = "Int_0";
+        for (int i = 0; i < NUM_INT_IMG; i++) {
+            imshow("Input", int_img[i]);
+            waitKey(200);
+        }
+        imshow("Input", img_2);
+
+        return;
     }
     
     vector< vector< pair <pair<int, int>, pair<int, int>>>> M_T = TV.first;
-    
+
     for (int i = 0; i < M_T.size(); i++) {
-        if (M_T[i].size() == 0) { continue; }
+        if (M_T[i].size() == 0) {
+            for (int _j = 0; _j < columns; _j++) {
+                double B_1 = img_1.at<Vec3b>(i, _j)[0];
+                double G_1 = img_1.at<Vec3b>(i, _j)[1];
+                double R_1 = img_1.at<Vec3b>(i, _j)[2];
+
+                double B_2 = img_2.at<Vec3b>(i, _j)[0];
+                double G_2 = img_2.at<Vec3b>(i, _j)[1];
+                double R_2 = img_2.at<Vec3b>(i, _j)[2];
+
+                double diff_B = (B_2 - B_1) / NUM_INT_IMG;
+                double diff_G = (G_2 - G_1) / NUM_INT_IMG;
+                double diff_R = (R_2 - R_1) / NUM_INT_IMG;
+
+                for (int k = 0; k < NUM_INT_IMG; k++) {
+                    int_img[k].at<Vec3b>(i, _j)[0] = B_1 + (diff_B * (k + 1));
+                    int_img[k].at<Vec3b>(i, _j)[1] = G_1 + (diff_G * (k + 1));
+                    int_img[k].at<Vec3b>(i, _j)[2] = R_1 + (diff_R * (k + 1));
+                }
+            }
+            continue; 
+        }
+        
+        //Determine 0's for Image 1
+        vector<pair<double, double>> Zeros = Find_Zeros(M_1[i], M_1[i].size());
+        for (int k = 0; k < Zeros.size(); k++) {
+            int initial_index = Zeros[k].first;
+            int final_index = Zeros[k].second;
+            while (initial_index < final_index) {
+                double B_1 = img_1.at<Vec3b>(i, initial_index)[0];
+                double G_1 = img_1.at<Vec3b>(i, initial_index)[1];
+                double R_1 = img_1.at<Vec3b>(i, initial_index)[2];
+                
+                double B_2 = img_2.at<Vec3b>(i, initial_index)[0];
+                double G_2 = img_2.at<Vec3b>(i, initial_index)[1];
+                double R_2 = img_2.at<Vec3b>(i, initial_index)[2];
+                
+                double diff_B = (B_2 - B_1) / NUM_INT_IMG;
+                double diff_G = (G_2 - G_1) / NUM_INT_IMG;
+                double diff_R = (R_2 - R_1) / NUM_INT_IMG;
+                
+                for (int img_i = 0; img_i < NUM_INT_IMG; img_i++) {
+                    int_img[img_i].at<Vec3b>(i, initial_index)[0] = B_1 + (diff_B * (img_i + 1));
+                    int_img[img_i].at<Vec3b>(i, initial_index)[1] = G_1 + (diff_G * (img_i + 1));
+                    int_img[img_i].at<Vec3b>(i, initial_index)[2] = R_1 + (diff_R * (img_i + 1));
+                }
+                
+                initial_index++;
+            }
+        }
+
+        //Determine 0's for Image 2
+        Zeros = Find_Zeros(M_2[i], M_2[i].size());
+        for (int k = 0; k < Zeros.size(); k++) {
+            int initial_index = Zeros[k].first;
+            int final_index = Zeros[k].second;
+            while (initial_index < final_index) {
+                double B_1 = img_1.at<Vec3b>(i, initial_index)[0];
+                double G_1 = img_1.at<Vec3b>(i, initial_index)[1];
+                double R_1 = img_1.at<Vec3b>(i, initial_index)[2];
+
+                double B_2 = img_2.at<Vec3b>(i, initial_index)[0];
+                double G_2 = img_2.at<Vec3b>(i, initial_index)[1];
+                double R_2 = img_2.at<Vec3b>(i, initial_index)[2];
+
+                double diff_B = (B_2 - B_1) / NUM_INT_IMG;
+                double diff_G = (G_2 - G_1) / NUM_INT_IMG;
+                double diff_R = (R_2 - R_1) / NUM_INT_IMG;
+
+                for (int img_i = 0; img_i < NUM_INT_IMG; img_i++) {
+                    int_img[img_i].at<Vec3b>(i, initial_index)[0] = B_1 + (diff_B * (img_i + 1));
+                    int_img[img_i].at<Vec3b>(i, initial_index)[1] = G_1 + (diff_G * (img_i + 1));
+                    int_img[img_i].at<Vec3b>(i, initial_index)[2] = R_1 + (diff_R * (img_i + 1));
+                }
+
+                initial_index++;
+            }
+        }
+        
         int _j = 0; 
         int max_j = M_T[i].size();
         while (_j < max_j - 2) {
@@ -738,26 +870,32 @@ void Animacion(string filename_1, string filename_2, int Tipo_De_Transformacion)
                             int_img[k].at<Vec3b>(i, index_i_begin)[2] = R_1 + (diff_R * (k + 1));
                         }
                         
-                        B_1 = img_1.at<Vec3b>(i, index_j_begin)[0];
-                        G_1 = img_1.at<Vec3b>(i, index_j_begin)[1];
-                        R_1 = img_1.at<Vec3b>(i, index_j_begin)[2];
-
-                        B_2 = img_2.at<Vec3b>(i, index_j_begin)[0];
-                        G_2 = img_2.at<Vec3b>(i, index_j_begin)[1];
-                        R_2 = img_2.at<Vec3b>(i, index_j_begin)[2];
-
-                        diff_B = (B_2 - B_1) / NUM_INT_IMG;
-                        diff_G = (G_2 - G_1) / NUM_INT_IMG;
-                        diff_R = (R_2 - R_1) / NUM_INT_IMG;
-
-                        for (int k = 0; k < NUM_INT_IMG; k++) {
-                            int_img[k].at<Vec3b>(i, index_j_begin)[0] = B_1 + (diff_B * (k + 1));
-                            int_img[k].at<Vec3b>(i, index_j_begin)[1] = G_1 + (diff_G * (k + 1));
-                            int_img[k].at<Vec3b>(i, index_j_begin)[2] = R_1 + (diff_R * (k + 1));
+                        if (index_j_begin == index_i_begin) {
+                            index_j_begin++;
+                            index_i_begin++;
                         }
-                        
-                        index_j_begin++;
-                        index_i_begin++;
+                        else {
+                            B_1 = img_1.at<Vec3b>(i, index_j_begin)[0];
+                            G_1 = img_1.at<Vec3b>(i, index_j_begin)[1];
+                            R_1 = img_1.at<Vec3b>(i, index_j_begin)[2];
+
+                            B_2 = img_2.at<Vec3b>(i, index_j_begin)[0];
+                            G_2 = img_2.at<Vec3b>(i, index_j_begin)[1];
+                            R_2 = img_2.at<Vec3b>(i, index_j_begin)[2];
+
+                            diff_B = (B_2 - B_1) / NUM_INT_IMG;
+                            diff_G = (G_2 - G_1) / NUM_INT_IMG;
+                            diff_R = (R_2 - R_1) / NUM_INT_IMG;
+
+                            for (int k = 0; k < NUM_INT_IMG; k++) {
+                                int_img[k].at<Vec3b>(i, index_j_begin)[0] = B_1 + (diff_B * (k + 1));
+                                int_img[k].at<Vec3b>(i, index_j_begin)[1] = G_1 + (diff_G * (k + 1));
+                                int_img[k].at<Vec3b>(i, index_j_begin)[2] = R_1 + (diff_R * (k + 1));
+                            }
+
+                            index_j_begin++;
+                            index_i_begin++;
+                        } 
                     }
                     _j++;
                     if (_j == max_j) { break; }
@@ -789,26 +927,31 @@ void Animacion(string filename_1, string filename_2, int Tipo_De_Transformacion)
                             int_img[k].at<Vec3b>(i, index_i_begin)[2] = R_1 + (diff_R * (k + 1));
                         }
 
-                        B_1 = img_1.at<Vec3b>(i, index_j_begin)[0];
-                        G_1 = img_1.at<Vec3b>(i, index_j_begin)[1];
-                        R_1 = img_1.at<Vec3b>(i, index_j_begin)[2];
-
-                        B_2 = img_2.at<Vec3b>(i, index_j_begin)[0];
-                        G_2 = img_2.at<Vec3b>(i, index_j_begin)[1];
-                        R_2 = img_2.at<Vec3b>(i, index_j_begin)[2];
-
-                        diff_B = (B_2 - B_1) / NUM_INT_IMG;
-                        diff_G = (G_2 - G_1) / NUM_INT_IMG;
-                        diff_R = (R_2 - R_1) / NUM_INT_IMG;
-
-                        for (int k = 0; k < NUM_INT_IMG; k++) {
-                            int_img[k].at<Vec3b>(i, index_j_begin)[0] = B_1 + (diff_B * (k + 1));
-                            int_img[k].at<Vec3b>(i, index_j_begin)[1] = G_1 + (diff_G * (k + 1));
-                            int_img[k].at<Vec3b>(i, index_j_begin)[2] = R_1 + (diff_R * (k + 1));
+                        if (index_j_begin == index_i_begin) {
+                            index_j_begin++;
+                            index_i_begin++;
                         }
+                        else {
+                            B_1 = img_1.at<Vec3b>(i, index_j_begin)[0];
+                            G_1 = img_1.at<Vec3b>(i, index_j_begin)[1];
+                            R_1 = img_1.at<Vec3b>(i, index_j_begin)[2];
 
-                        index_j_begin++;
-                        index_i_begin++;
+                            B_2 = img_2.at<Vec3b>(i, index_j_begin)[0];
+                            G_2 = img_2.at<Vec3b>(i, index_j_begin)[1];
+                            R_2 = img_2.at<Vec3b>(i, index_j_begin)[2];
+
+                            diff_B = (B_2 - B_1) / NUM_INT_IMG;
+                            diff_G = (G_2 - G_1) / NUM_INT_IMG;
+                            diff_R = (R_2 - R_1) / NUM_INT_IMG;
+
+                            for (int k = 0; k < NUM_INT_IMG; k++) {
+                                int_img[k].at<Vec3b>(i, index_j_begin)[0] = B_1 + (diff_B * (k + 1));
+                                int_img[k].at<Vec3b>(i, index_j_begin)[1] = G_1 + (diff_G * (k + 1));
+                                int_img[k].at<Vec3b>(i, index_j_begin)[2] = R_1 + (diff_R * (k + 1));
+                            }
+                            index_j_begin++;
+                            index_i_begin++;
+                        }
                     }
                     _j++;
                     if (_j == max_j) { break; }
@@ -838,26 +981,31 @@ void Animacion(string filename_1, string filename_2, int Tipo_De_Transformacion)
                         int_img[k].at<Vec3b>(i, index_i_begin)[2] = R_1 + (diff_R * (k + 1));
                     }
 
-                    B_1 = img_1.at<Vec3b>(i, index_j_begin)[0];
-                    G_1 = img_1.at<Vec3b>(i, index_j_begin)[1];
-                    R_1 = img_1.at<Vec3b>(i, index_j_begin)[2];
-
-                    B_2 = img_2.at<Vec3b>(i, index_j_begin)[0];
-                    G_2 = img_2.at<Vec3b>(i, index_j_begin)[1];
-                    R_2 = img_2.at<Vec3b>(i, index_j_begin)[2];
-
-                    diff_B = (B_2 - B_1) / NUM_INT_IMG;
-                    diff_G = (G_2 - G_1) / NUM_INT_IMG;
-                    diff_R = (R_2 - R_1) / NUM_INT_IMG;
-
-                    for (int k = 0; k < NUM_INT_IMG; k++) {
-                        int_img[k].at<Vec3b>(i, index_j_begin)[0] = B_1 + (diff_B * (k + 1));
-                        int_img[k].at<Vec3b>(i, index_j_begin)[1] = G_1 + (diff_G * (k + 1));
-                        int_img[k].at<Vec3b>(i, index_j_begin)[2] = R_1 + (diff_R * (k + 1));
+                    if (index_i_begin == index_j_begin) {
+                        index_j_begin++;
+                        index_i_begin++;
                     }
+                    else {
+                        B_1 = img_1.at<Vec3b>(i, index_j_begin)[0];
+                        G_1 = img_1.at<Vec3b>(i, index_j_begin)[1];
+                        R_1 = img_1.at<Vec3b>(i, index_j_begin)[2];
 
-                    index_j_begin++;
-                    index_i_begin++;
+                        B_2 = img_2.at<Vec3b>(i, index_j_begin)[0];
+                        G_2 = img_2.at<Vec3b>(i, index_j_begin)[1];
+                        R_2 = img_2.at<Vec3b>(i, index_j_begin)[2];
+
+                        diff_B = (B_2 - B_1) / NUM_INT_IMG;
+                        diff_G = (G_2 - G_1) / NUM_INT_IMG;
+                        diff_R = (R_2 - R_1) / NUM_INT_IMG;
+
+                        for (int k = 0; k < NUM_INT_IMG; k++) {
+                            int_img[k].at<Vec3b>(i, index_j_begin)[0] = B_1 + (diff_B * (k + 1));
+                            int_img[k].at<Vec3b>(i, index_j_begin)[1] = G_1 + (diff_G * (k + 1));
+                            int_img[k].at<Vec3b>(i, index_j_begin)[2] = R_1 + (diff_R * (k + 1));
+                        }
+                        index_j_begin++;
+                        index_i_begin++;
+                    }
                 }
                 _j++;
                 if (_j == max_j) { break; }
@@ -869,15 +1017,9 @@ void Animacion(string filename_1, string filename_2, int Tipo_De_Transformacion)
     string s_temp = "Int_0";
     for (int i = 0; i < NUM_INT_IMG; i++) {
         imshow("Input", int_img[i]);
-        //this_thread::sleep_for(chrono::seconds(1));
-        waitKey();
-        //img_1.setTo(Scalar(0, 0, 0));
-        /*imshow(s_temp, int_img[i]);
-        s_temp.replace(4, 1, to_string(i+1));*/
+        waitKey(200);
     }
-    //imshow("Output", img_2);
     imshow("Input", img_2);
-    waitKey();
 }
 
 int main() {
@@ -888,7 +1030,7 @@ int main() {
     cin >> filename_1;
     cout << "Insert image 2 name = ";
     cin >> filename_2;
-    cout << "Elegir tipo de transformacion (1 == Voraz, 2 == Prog Din, 3 == Prog Din Promedio) // If another number is inserted then Prog Din will be choosen" << endl;
+    cout << "Elegir tipo de transformacion (1 == Voraz, 2 == Prog Din, 3 == Prog Din Promedio) // If another number is inserted then an average between each pixel will be chosen" << endl;
     cout << "Tipo = ";
     cin >> Tipo_De_Transformacion;
 
